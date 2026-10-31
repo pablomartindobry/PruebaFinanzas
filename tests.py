@@ -87,6 +87,6 @@ def test_cheque_rechazado_en_los_ultimos_3_meses_va_a_revision_manual():
 
 
 def test_totales_del_dataset_completo():
-    """Con las reglas bien aplicadas, las 200 solicitudes del CSV dan estos totales."""
+    """Con las reglas bien aplicadas, las 250 solicitudes del CSV dan estos totales."""
     totales = Counter(evaluar(s)["decision"] for s in cargar_solicitudes(CSV))
-    assert totales == {"APROBADO": 113, "RECHAZADO": 67, "REVISION_MANUAL": 20}
+    assert totales == {"APROBADO": 141, "RECHAZADO": 84, "REVISION_MANUAL": 25}
