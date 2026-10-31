@@ -6,14 +6,19 @@ from collections import Counter
 COLUMNAS_TEXTO = {"fecha_solicitud", "nombre_solicitante", "ciudad"}
 
 
-def cargar_solicitudes(ruta):
+def cargar_solicitudes(ruta, filas_con_error=None):
+    """Lee el CSV; una fila con valores invalidos se registra en el log, se salta y se anota en filas_con_error."""
+    solicitudes = []
     with open(ruta, newline="", encoding="utf-8") as f:
-        filas = list(csv.DictReader(f))
-    for fila in filas:
-        for col, val in fila.items():
-            if col not in COLUMNAS_TEXTO:
-                fila[col] = int(val)
-    return filas
+        for nro, fila in enumerate(csv.DictReader(f), start=2):  # la fila 1 es el encabezado
+            try:
+                solicitudes.append({col: val if col in COLUMNAS_TEXTO else int(val)
+                                    for col, val in fila.items()})
+            except (ValueError, TypeError):
+                logging.exception("Fila %d del CSV invalida (id_solicitud=%s)", nro, fila.get("id_solicitud"))
+                if filas_con_error is not None:
+                    filas_con_error.append(nro)
+    return solicitudes
 
 
 def evaluar(s):
@@ -50,9 +55,10 @@ def evaluar(s):
 def main():
     logging.basicConfig(filename="evaluar.log", filemode="w", encoding="utf-8",
                         level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    solicitudes = cargar_solicitudes("datos/solicitudes.csv")
+    filas_con_error = []
+    solicitudes = cargar_solicitudes("datos/solicitudes.csv", filas_con_error)
     resultados = []
-    errores = 0
+    errores = len(filas_con_error)
     for s in solicitudes:
         try:
             r = evaluar(s)
@@ -69,7 +75,7 @@ def main():
             w.writerows(resultados)
 
     logging.info("Solicitudes procesadas: %d de %d (errores: %d)",
-                 len(resultados), len(solicitudes), errores)
+                 len(resultados), len(solicitudes) + len(filas_con_error), errores)
     for decision, n in Counter(r["decision"] for r in resultados).items():
         logging.info("Decision %s: %d", decision, n)
     for (decision, motivo), n in Counter((r["decision"], r["motivo"]) for r in resultados).items():
