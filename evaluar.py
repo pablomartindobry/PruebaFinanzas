@@ -53,7 +53,7 @@ def evaluar(s):
 
 
 def main():
-    logging.basicConfig(filename="evaluar.log", filemode="w", encoding="utf-8",
+    logging.basicConfig(filename="evaluar.log", filemode="a", encoding="utf-8",
                         level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     filas_con_error = []
     solicitudes = cargar_solicitudes("datos/solicitudes.csv", filas_con_error)
